@@ -186,7 +186,7 @@ function toggleCar(S: GameState, W: World, A: GameAudio) {
     pushOut(p, 0.4, W.colliders);
     c.ai = "parked";
     S.car = null;
-    p.y = 0;
+    p.y = c.y ?? 0;
     p.yaw = c.h + Math.PI;
     p.pitch = 0;
     return;
@@ -220,9 +220,11 @@ function walk(S: GameState, W: World, I: Input, dt: number) {
   const speed = sprint ? 9.5 : 4.6;
   const px = p.x, pz = p.z;
   if (len > 0) { p.x += (mx / len) * speed * dt; p.z += (mz / len) * speed * dt; }
-  pushOut(p, 0.4, W.colliders);
+  const elevW = deckY(p.x, p.z) > 1 && p.y > 1;
+  if (elevW) p.z = clamp(p.z, FLYOVER_Z - 5.6, FLYOVER_Z + 5.6);
+  else pushOut(p, 0.4, W.colliders);
   for (const c of S.cars) {
-    if (!c.active) continue;
+    if (!c.active || Math.abs((c.y ?? 0) - p.y) > 2) continue;
     const r = SPECS[c.type].r + 0.4;
     const dx = p.x - c.x, dz = p.z - c.z, d = Math.hypot(dx, dz);
     if (d < r && d > 0.001) { p.x = c.x + (dx / d) * r; p.z = c.z + (dz / d) * r; }
@@ -231,7 +233,8 @@ function walk(S: GameState, W: World, I: Input, dt: number) {
   if (k.has("Space") && p.onGround) { p.vy = 6.5; p.onGround = false; }
   p.vy -= 20 * dt;
   p.y += p.vy * dt;
-  if (p.y <= 0) { p.y = 0; p.vy = 0; p.onGround = true; }
+  const gY = surfaceY(p.y + 0.5, p.x, p.z);
+  if (p.y <= gY) { p.y = gY; p.vy = 0; p.onGround = true; }
   if (p.moving && p.onGround) p.bob += dt * (sprint ? 15 : 9);
 }
 
@@ -263,7 +266,11 @@ function drive(S: GameState, W: World, I: Input, dt: number, A: GameAudio) {
   c.x += c.vx * dt;
   c.z += c.vz * dt;
   const before = Math.hypot(c.vx, c.vz);
-  if (pushOut(c, sp.r, W.colliders)) {
+  c.y = surfaceY(c.y ?? 0, c.x, c.z);
+  if (c.y > 1) {
+    const lo = FLYOVER_Z - 5.6 + sp.wid / 2, hi = FLYOVER_Z + 5.6 - sp.wid / 2;
+    if (c.z < lo || c.z > hi) { c.z = clamp(c.z, lo, hi); c.vz *= -0.2; }
+  } else if (pushOut(c, sp.r, W.colliders)) {
     c.vx = ((c.x - px) / dt) * 0.85;
     c.vz = ((c.z - pz) / dt) * 0.85;
     const after = Math.hypot(c.vx, c.vz);
@@ -274,7 +281,7 @@ function drive(S: GameState, W: World, I: Input, dt: number, A: GameAudio) {
   c.speed = c.vx * nh + c.vz * nc;
 
   for (const o of S.cars) {
-    if (o === c || !o.active) continue;
+    if (o === c || !o.active || Math.abs((o.y ?? 0) - (c.y ?? 0)) > 2) continue;
     const rr = sp.r + SPECS[o.type].r;
     const dx = o.x - c.x, dz = o.z - c.z, d = Math.hypot(dx, dz);
     if (d >= rr || d < 0.001) continue;
@@ -326,15 +333,26 @@ function traffic(S: GameState, W: World, dt: number, A: GameAudio) {
     c.h += clamp(diff, -2.2 * dt, 2.2 * dt);
     let desired = sp.max * 0.55 * (Math.abs(diff) > 0.5 ? 0.4 : 1);
     const fx = Math.sin(c.h), fz = Math.cos(c.h);
+    const cy = c.y ?? 0;
+    if (cy < 1) {
+      const ph = lightPhase(S.time);
+      const st = Math.abs(fz) > 0.85 ? ph.ns : Math.abs(fx) > 0.85 ? ph.ew : "g";
+      if (st !== "g") for (const L of LIGHTS) {
+        const rx = L.x - c.x, rz = L.z - c.z;
+        const along = rx * fx + rz * fz;
+        if (along > 8 && along < 15 && Math.abs(rx * -fz + rz * fx) < 8) { desired = 0; break; }
+      }
+    }
     let blocked = false;
-    const check = (ox: number, oz: number) => {
+    const check = (ox: number, oz: number, oy = 0) => {
+      if (Math.abs(oy - cy) > 2) return;
       const rx = ox - c.x, rz = oz - c.z;
       const along = rx * fx + rz * fz;
       const lat = Math.abs(rx * -fz + rz * fx);
       if (along > 0 && along < 9 && lat < 2.2) blocked = true;
     };
-    for (const o of S.cars) if (o !== c && o.active) check(o.x, o.z);
-    check(pp.x, pp.z);
+    for (const o of S.cars) if (o !== c && o.active) check(o.x, o.z, o.y ?? 0);
+    check(pp.x, pp.z, S.car ? S.car.y ?? 0 : S.player.y);
     if (blocked) {
       c.blocked += dt;
       if (c.blocked < 5) desired = 0;
@@ -343,6 +361,7 @@ function traffic(S: GameState, W: World, dt: number, A: GameAudio) {
     c.speed += clamp(desired - c.speed, -16 * dt, 6 * dt);
     c.x += fx * c.speed * dt;
     c.z += fz * c.speed * dt;
+    c.y = surfaceY(cy, c.x, c.z);
   }
 }
 
