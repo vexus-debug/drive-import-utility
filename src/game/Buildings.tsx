@@ -68,11 +68,11 @@ export function Buildings({ W }: { W: World }) {
       const cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2;
       const wx = b.maxX - b.minX, wz = b.maxZ - b.minZ;
 
-      const y = b.kind === "bank" ? BANK_PODIUM - 2.4 : b.kind === "hotel" ? b.h - 1.6 : b.kind === "restaurant" || b.kind === "cafe" ? b.h - 0.4 : 4.1;
-      const sw = Math.min(b.kind === "hotel" ? 12 : 7, wx - 1), sh = sw / 4;
+      const y = b.kind === "bank" ? BANK_PODIUM - 0.7 : b.kind === "hotel" ? b.h - 1.6 : b.kind === "restaurant" || b.kind === "cafe" ? b.h - 0.4 : 4.1;
+      const sw = Math.min(b.kind === "hotel" ? 12 : b.kind === "bank" ? 5.6 : 7, wx - 1), sh = sw / 4;
       out.push({ tex, pos: [cx, y, b.maxZ + 0.08], rot: 0, w: sw, h: sh });
       out.push({ tex, pos: [cx, y, b.minZ - 0.08], rot: Math.PI, w: sw, h: sh });
-      const sw2 = Math.min(b.kind === "hotel" ? 12 : 7, wz - 1);
+      const sw2 = Math.min(b.kind === "hotel" ? 12 : b.kind === "bank" ? 5.6 : 7, wz - 1);
       out.push({ tex, pos: [b.maxX + 0.08, y, cz], rot: Math.PI / 2, w: sw2, h: sw2 / 4 });
       out.push({ tex, pos: [b.minX - 0.08, y, cz], rot: -Math.PI / 2, w: sw2, h: sw2 / 4 });
     }
