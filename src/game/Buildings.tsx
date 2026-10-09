@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { BKind, Building, World } from "./world";
+import { BANK_PODIUM } from "./Architecture";
 import { facade, glassFacade, hotelFacade, residentialFacade, signTexture, worldUVFacade } from "./textures";
 
 type Family = "bank" | "office" | "hotel" | "residential" | "street";
@@ -66,12 +67,12 @@ export function Buildings({ W }: { W: World }) {
       const tex = cache.get(key)!;
       const cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2;
       const wx = b.maxX - b.minX, wz = b.maxZ - b.minZ;
-      const tall = b.kind === "bank" || b.kind === "hotel";
-      const y = tall ? b.h - 1.6 : 4.1;
-      const sw = Math.min(tall ? 12 : 7, wx - 1), sh = sw / 4;
+
+      const y = b.kind === "bank" ? BANK_PODIUM - 2.4 : b.kind === "hotel" ? b.h - 1.6 : b.kind === "restaurant" || b.kind === "cafe" ? b.h - 0.4 : 4.1;
+      const sw = Math.min(b.kind === "hotel" ? 12 : 7, wx - 1), sh = sw / 4;
       out.push({ tex, pos: [cx, y, b.maxZ + 0.08], rot: 0, w: sw, h: sh });
       out.push({ tex, pos: [cx, y, b.minZ - 0.08], rot: Math.PI, w: sw, h: sh });
-      const sw2 = Math.min(tall ? 12 : 7, wz - 1);
+      const sw2 = Math.min(b.kind === "hotel" ? 12 : 7, wz - 1);
       out.push({ tex, pos: [b.maxX + 0.08, y, cz], rot: Math.PI / 2, w: sw2, h: sw2 / 4 });
       out.push({ tex, pos: [b.minX - 0.08, y, cz], rot: -Math.PI / 2, w: sw2, h: sw2 / 4 });
     }
@@ -82,7 +83,7 @@ export function Buildings({ W }: { W: World }) {
     const out: { pos: [number, number, number]; size: [number, number, number]; rotX: number; rotY: number; color: string }[] = [];
     for (const b of W.buildings) {
       const col = b.brand ? (b.brand.bg === "#ffffff" ? b.brand.fg : b.brand.bg) : b.kind ? AWNING[b.kind] : undefined;
-      if (!col || b.h > 60) continue;
+      if (!col || b.h > 60 || b.kind === "bank" || b.kind === "restaurant" || b.kind === "cafe") continue;
       const cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2;
       const wx = b.maxX - b.minX, wz = b.maxZ - b.minZ;
       out.push({ pos: [cx, 3.35, b.maxZ + 0.9], size: [wx * 0.9, 0.08, 1.8], rotX: 0.25, rotY: 0, color: col });

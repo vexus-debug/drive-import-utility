@@ -11,7 +11,7 @@ const hash = (b: Building) => {
 
 /** Low-rise old-town buildings get a pitched corrugated roof. */
 export const hasRoof = (b: Building) =>
-  b.h <= 22 && (b.heritage || !b.kind || b.kind === "residential" || b.kind === "shop" || b.kind === "cafe" || b.kind === "restaurant");
+  b.h <= 22 && (b.heritage || !b.kind || b.kind === "residential" || b.kind === "shop");
 
 export const roofRise = (b: Building) => (hasRoof(b) ? Math.min(b.maxX - b.minX, b.maxZ - b.minZ) * (0.22 + hash(b) * 0.1) : 0);
 

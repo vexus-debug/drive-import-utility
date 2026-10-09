@@ -65,6 +65,7 @@ function classifyBuildings(list: Building[]) {
     if (b.kind === "restaurant") { b.brand = pick(FOOD); b.sign = b.brand.name; }
     if (b.kind === "hotel") { b.brand = pick(HOTELS); b.sign = b.brand.name; }
     if (b.kind === "residential") b.color = pick(RES);
+    if (b.kind === "cafe" || b.kind === "restaurant") b.h = r() < 0.5 ? 4.5 : 7.5;
   }
 }
 
