@@ -1,6 +1,6 @@
 import type { GameAudio } from "./audio";
 import { SPECS, type Car, type CarType, type GameState, type Input, type P } from "./types";
-import { LINES, inWorld, randomSidewalkPoint, type Box, type World } from "./world";
+import { FLYOVER_Z, LIGHTS, LINES, deckY, inWorld, lightPhase, surfaceY, randomSidewalkPoint, type Box, type World } from "./world";
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const wrapA = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -267,7 +267,7 @@ function drive(S: GameState, W: World, I: Input, dt: number, A: GameAudio) {
   c.z += c.vz * dt;
   const before = Math.hypot(c.vx, c.vz);
   c.y = surfaceY(c.y ?? 0, c.x, c.z);
-  if (c.y > 1) {
+  if (c.y! > 1) {
     const lo = FLYOVER_Z - 5.6 + sp.wid / 2, hi = FLYOVER_Z + 5.6 - sp.wid / 2;
     if (c.z < lo || c.z > hi) { c.z = clamp(c.z, lo, hi); c.vz *= -0.2; }
   } else if (pushOut(c, sp.r, W.colliders)) {

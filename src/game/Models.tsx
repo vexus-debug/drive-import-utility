@@ -210,9 +210,17 @@ export function WorldMesh({ W }: { W: World }) {
         <mesh key={x} position={[x, 0.031, 467.5]} receiveShadow material={T.roadV}><boxGeometry args={[12, 0.04, 91]} /></mesh>
       ))}
       {/* overpass */}
-      <mesh position={[0, 9, FLYOVER_Z]} castShadow receiveShadow material={mat("#9c958a")}><boxGeometry args={[420, 1.2, 13]} /></mesh>
+      <mesh position={[0, 9, FLYOVER_Z]} castShadow receiveShadow material={mat("#9c958a")}><boxGeometry args={[300, 1.2, 13]} /></mesh>
       {[-6.2, 6.2].map((o) => (
-        <mesh key={o} position={[0, 10, FLYOVER_Z + o]} material={mat("#d9d2c3")}><boxGeometry args={[420, 0.9, 0.5]} /></mesh>
+        <mesh key={o} position={[0, 10, FLYOVER_Z + o]} material={mat("#d9d2c3")}><boxGeometry args={[300, 0.9, 0.5]} /></mesh>
+      ))}
+      {[1, -1].map((sx) => (
+        <group key={sx} position={[sx * 178, 4.2, FLYOVER_Z]} rotation={[0, 0, -sx * Math.atan(9.6 / 56)]}>
+          <mesh castShadow receiveShadow material={mat("#9c958a")}><boxGeometry args={[57, 1.2, 13]} /></mesh>
+          {[-6.2, 6.2].map((o) => (
+            <mesh key={o} position={[0, 1, o]} material={mat("#d9d2c3")}><boxGeometry args={[57, 0.9, 0.5]} /></mesh>
+          ))}
+        </group>
       ))}
       {W.pillars.map((p, i) => (
         <mesh key={i} position={[p.x, 4.5, p.z]} castShadow material={mat("#b8b1a3")}><boxGeometry args={[1.4, 9, 1.4]} /></mesh>

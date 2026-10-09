@@ -251,7 +251,7 @@ export function buildWorld() {
 
   // overpass pillars (Marina expressway) along z=-100
   const pillars: P[] = [];
-  for (let x = -200; x <= 200; x += 25) {
+  for (let x = -150; x <= 150; x += 25) {
     pillars.push({ x, z: FLYOVER_Z });
     colliders.push({ minX: x - 0.7, maxX: x + 0.7, minZ: FLYOVER_Z - 0.7, maxZ: FLYOVER_Z + 0.7 });
   }
@@ -347,4 +347,28 @@ export function inWorld(x: number, z: number) {
     (Math.abs(x) <= 58 && z >= 418 && z <= 515) ||
     (z < -195 && z > -262 && Math.abs(x) <= 212 && distToMarina(x, z) <= 9.5)
   );
+}
+
+export const DECK_Y = 9.6;
+/** Flyover deck height at (x,z); flat for |x|<=150, ramps down to ground at |x|=206; -1 when off the deck. */
+export function deckY(x: number, z: number) {
+  if (Math.abs(z - FLYOVER_Z) > 6.2) return -1;
+  const ax = Math.abs(x);
+  if (ax <= 150) return DECK_Y;
+  if (ax >= 206) return -1;
+  return (DECK_Y * (206 - ax)) / 56;
+}
+/** Stay on the deck/ramp only if already near its height; otherwise ground. */
+export function surfaceY(prevY: number, x: number, z: number) {
+  const d = deckY(x, z);
+  return d >= 0 && Math.abs(d - prevY) < 1.6 ? d : 0;
+}
+export const LIGHTS: P[] = [];
+for (const x of LINES) for (const z of LINES) LIGHTS.push({ x, z });
+export function lightPhase(t: number): { ns: "g" | "y" | "r"; ew: "g" | "y" | "r" } {
+  const k = t % 18;
+  if (k < 7) return { ns: "g", ew: "r" };
+  if (k < 9) return { ns: "y", ew: "r" };
+  if (k < 16) return { ns: "r", ew: "g" };
+  return { ns: "r", ew: "y" };
 }
