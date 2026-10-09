@@ -202,7 +202,6 @@ export function WorldMesh({ W }: { W: World }) {
           <mesh position={[x, 0.046, 0]} material={mat("#f2c230")}><boxGeometry args={[0.35, 0.01, 232]} /></mesh>
         </group>
       ))}
-      {W.blocks.slice(16).length > 0 && null}
       {/* Victoria Island ring road */}
       {[428, 507].map((z) => (
         <mesh key={z} position={[0, 0.03, z]} receiveShadow material={T.roadH}><boxGeometry args={[108, 0.04, 12]} /></mesh>
