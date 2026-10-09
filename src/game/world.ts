@@ -297,6 +297,28 @@ export function buildWorld() {
   // yellow steel-truss pedestrian footbridges over the Marina expressway (z=-100)
   const footbridges: P[] = [-160, -60, 40, 140].map((x) => ({ x: x + 12, z: FLYOVER_Z }));
 
+  // Ikoyi district east across Eko Bridge, with a canal cut through it
+  for (const [x0, x1] of IKOYI_BX) for (const [z0, z1] of IKOYI_BZ) {
+    blocks.push({ minX: x0, maxX: x1, minZ: z0, maxZ: z1 });
+    const n = 2;
+    for (let k = 0; k < n; k++) {
+      const cx = x0 + ((x1 - x0) * (k + 0.5)) / n, cz = (z0 + z1) / 2;
+      const w = Math.min(16, (x1 - x0) / n - 6), dp = Math.min(18, z1 - z0 - 10);
+      const bd = { minX: cx - w / 2, maxX: cx + w / 2, minZ: cz - dp / 2, maxZ: cz + dp / 2 };
+      buildings.push({ ...bd, h: 10 + r() * 50, color: PALETTE[Math.floor(r() * PALETTE.length)] });
+      colliders.push(bd);
+    }
+  }
+  // canal banks block cars except at the road bridges
+  for (const [a, b] of [[266, 322], [338, 394]]) colliders.push({ minX: a, maxX: b, minZ: CANAL.z0, maxZ: CANAL.z1 });
+  // Eko Bridge rails
+  colliders.push({ minX: 213, maxX: 250, minZ: -9, maxZ: -7.8 }, { minX: 213, maxX: 250, minZ: 7.8, maxZ: 9 });
+  const IK = (s: number) => [{ x: 196, z: 4 * s }, { x: 254 + 4 * -s, z: 4 * s }];
+  routes.push([...IK(1), { x: 250, z: 108 }, { x: 406, z: 108 }, { x: 406, z: -108 }, { x: 250, z: -108 }, ...IK(-1).reverse()]);
+  routes.push([{ x: 334, z: -112 }, { x: 334, z: 112 }, { x: 326, z: 112 }, { x: 326, z: -112 }]);
+  // Victoria Island ring
+  routes.push([{ x: -46, z: 428 }, { x: 46, z: 428 }, { x: 46, z: 507 }, { x: -46, z: 507 }]);
+
   classifyBuildings(buildings);
   return { footbridges, buildings, colliders, palms, stalls, billboards, sidewalks, blocks, routes, pillars, busStops, poles };
 }
@@ -311,9 +333,16 @@ export function randomSidewalkPoint(W: World): P {
   return { x: a.x + (b.x - a.x) * f, z: a.z + (b.z - a.z) * f };
 }
 
+/** Ikoyi: land x 250..410, z -120..120; ring roads at x 254/406, z ±108, spine x=330, canal z -56..-44. */
+export const IKOYI = { x0: 246, x1: 414, z0: -120, z1: 120 };
+export const CANAL = { z0: -56, z1: -44 };
+export const IKOYI_BX: [number, number][] = [[264, 322], [338, 398]];
+export const IKOYI_BZ: [number, number][] = [[-100, -60], [-40, -8], [8, 100]];
 export function inWorld(x: number, z: number) {
   return (
     (Math.abs(x) <= 213 && Math.abs(z) <= 213) ||
+    (Math.abs(z) <= 7.6 && x >= 200 && x <= 250) ||
+    (x >= IKOYI.x0 && x <= IKOYI.x1 && z >= IKOYI.z0 && z <= IKOYI.z1) ||
     (Math.abs(x) <= 7.6 && z >= 200 && z <= 422) ||
     (Math.abs(x) <= 58 && z >= 418 && z <= 515) ||
     (z < -195 && z > -262 && Math.abs(x) <= 212 && distToMarina(x, z) <= 9.5)

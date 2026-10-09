@@ -1,7 +1,7 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import type { Car, GameState, Ped } from "./types";
-import { DIAGONALS, FLYOVER_Z, LINES, MARINA_CURVE, type World } from "./world";
+import { CANAL, DIAGONALS, FLYOVER_Z, IKOYI, LINES, MARINA_CURVE, type World } from "./world";
 import { Buildings } from "./Buildings";
 import { Architecture } from "./Architecture";
 import { OldTown } from "./OldTown";
@@ -167,6 +167,47 @@ export function WorldMesh({ W }: { W: World }) {
       ))}
       {Array.from({ length: 11 }, (_, i) => (
         <mesh key={i} position={[0, -1.4, 220 + i * 20]} material={mat("#bdb5a4")}><boxGeometry args={[12, 2.4, 2]} /></mesh>
+      ))}
+      {/* Eko Bridge to Ikoyi */}
+      <mesh position={[231, -0.2, 0]} receiveShadow material={T.roadH}><boxGeometry args={[40, 0.5, 16]} /></mesh>
+      {[-8.4, 8.4].map((z) => (
+        <mesh key={z} position={[231, 0.5, z]} material={mat("#e6e1d3")} castShadow><boxGeometry args={[40, 1, 0.6]} /></mesh>
+      ))}
+      {[218, 231, 244].map((x) => (
+        <mesh key={x} position={[x, -1.4, 0]} material={mat("#bdb5a4")}><boxGeometry args={[2, 2.4, 12]} /></mesh>
+      ))}
+      {/* Ikoyi land split by canal */}
+      <mesh position={[(IKOYI.x0 + IKOYI.x1) / 2, -1.5, (IKOYI.z0 + CANAL.z0) / 2]} receiveShadow material={mat("#c9b089")}>
+        <boxGeometry args={[IKOYI.x1 - IKOYI.x0, 3, CANAL.z0 - IKOYI.z0]} />
+      </mesh>
+      <mesh position={[(IKOYI.x0 + IKOYI.x1) / 2, -1.5, (CANAL.z1 + IKOYI.z1) / 2]} receiveShadow material={mat("#c9b089")}>
+        <boxGeometry args={[IKOYI.x1 - IKOYI.x0, 3, IKOYI.z1 - CANAL.z1]} />
+      </mesh>
+      {[CANAL.z0 - 0.3, CANAL.z1 + 0.3].map((z) => (
+        <mesh key={z} position={[(IKOYI.x0 + IKOYI.x1) / 2, 0.3, z]} material={mat("#8f8a80")}><boxGeometry args={[IKOYI.x1 - IKOYI.x0, 0.6, 0.6]} /></mesh>
+      ))}
+      {/* Ikoyi roads */}
+      {[-108, 0, 108].map((z) => (
+        <mesh key={z} position={[330, 0.02, z]} receiveShadow material={T.roadH}><boxGeometry args={[168, 0.04, 16]} /></mesh>
+      ))}
+      {[254, 330, 406].map((x) => (
+        <group key={x}>
+          <mesh position={[x, 0.021, (IKOYI.z0 + CANAL.z0) / 2]} receiveShadow material={T.roadV}><boxGeometry args={[16, 0.04, CANAL.z0 - IKOYI.z0]} /></mesh>
+          <mesh position={[x, 0.021, (CANAL.z1 + IKOYI.z1) / 2]} receiveShadow material={T.roadV}><boxGeometry args={[16, 0.04, IKOYI.z1 - CANAL.z1]} /></mesh>
+          {/* road bridge over the canal */}
+          <mesh position={[x, -0.2, (CANAL.z0 + CANAL.z1) / 2]} receiveShadow material={T.bridge}><boxGeometry args={[16, 0.5, CANAL.z1 - CANAL.z0 + 1]} /></mesh>
+          {[-8.4, 8.4].map((o) => (
+            <mesh key={o} position={[x + o, 0.5, (CANAL.z0 + CANAL.z1) / 2]} material={mat("#e6e1d3")}><boxGeometry args={[0.6, 1, CANAL.z1 - CANAL.z0 + 1]} /></mesh>
+          ))}
+          <mesh position={[x, 0.046, 0]} material={mat("#f2c230")}><boxGeometry args={[0.35, 0.01, 232]} /></mesh>
+        </group>
+      ))}
+      {/* Victoria Island ring road */}
+      {[428, 507].map((z) => (
+        <mesh key={z} position={[0, 0.03, z]} receiveShadow material={T.roadH}><boxGeometry args={[108, 0.04, 12]} /></mesh>
+      ))}
+      {[-46, 46].map((x) => (
+        <mesh key={x} position={[x, 0.031, 467.5]} receiveShadow material={T.roadV}><boxGeometry args={[12, 0.04, 91]} /></mesh>
       ))}
       {/* overpass */}
       <mesh position={[0, 9, FLYOVER_Z]} castShadow receiveShadow material={mat("#9c958a")}><boxGeometry args={[420, 1.2, 13]} /></mesh>

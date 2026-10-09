@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { GameAudio } from "./audio";
 import { SPECS, type GameState } from "./types";
-import { DIAGONALS, LINES, MARINA_CURVE } from "./world";
+import { CANAL, DIAGONALS, IKOYI, LINES, MARINA_CURVE } from "./world";
 
-const R = 82;
-const RANGE = 160;
-
-function drawRadar(cv: HTMLCanvasElement, S: GameState) {
+function drawRadar(cv: HTMLCanvasElement, S: GameState, R: number, RANGE: number) {
   const g = cv.getContext("2d")!;
   const p = S.car ?? S.player;
   const fx = S.car ? Math.sin(S.car.h) : -Math.sin(S.player.yaw);
@@ -31,6 +28,8 @@ function drawRadar(cv: HTMLCanvasElement, S: GameState) {
   };
   poly([[-215, -215], [215, -215], [215, 215], [-215, 215]], "#6f8a5a");
   poly([[-60, 418], [60, 418], [60, 517], [-60, 517]], "#6f8a5a");
+  poly([[IKOYI.x0, IKOYI.z0], [IKOYI.x1, IKOYI.z0], [IKOYI.x1, IKOYI.z1], [IKOYI.x0, IKOYI.z1]], "#6f8a5a");
+  poly([[IKOYI.x0, CANAL.z0], [IKOYI.x1, CANAL.z0], [IKOYI.x1, CANAL.z1], [IKOYI.x0, CANAL.z1]], "#2a8fa3");
   g.strokeStyle = "#d9d9d9";
   g.lineWidth = 16 * sc;
   const line = (a: [number, number], b: [number, number]) => {
@@ -40,6 +39,10 @@ function drawRadar(cv: HTMLCanvasElement, S: GameState) {
   for (const v of LINES) { line([-208, v], [208, v]); line([v, -208], [v, 208]); }
   for (let i = 0; i < MARINA_CURVE.length - 1; i++) line([MARINA_CURVE[i].x, MARINA_CURVE[i].z], [MARINA_CURVE[i + 1].x, MARINA_CURVE[i + 1].z]);
   line([0, 200], [0, 480]);
+  line([200, 0], [406, 0]);
+  for (const z of [-108, 108]) line([254, z], [406, z]);
+  for (const x of [254, 330, 406]) line([x, -108], [x, 108]);
+  line([-46, 428], [46, 428]); line([46, 428], [46, 507]); line([46, 507], [-46, 507]); line([-46, 507], [-46, 428]);
   for (const d of DIAGONALS) for (let i = 0; i < d.pts.length - 1; i++) line([d.pts[i].x, d.pts[i].z], [d.pts[i + 1].x, d.pts[i + 1].z]);
   const dot = (x: number, z: number, color: string, size: number, clampEdge = false) => {
     let [a, b] = T(x, z);
@@ -71,13 +74,20 @@ function drawRadar(cv: HTMLCanvasElement, S: GameState) {
 export function HUD({ S, audio }: { S: GameState; audio: GameAudio }) {
   const [, setTick] = useState(0);
   const radar = useRef<HTMLCanvasElement>(null);
+  const [big, setBig] = useState(false);
+  const R = big ? 300 : 82;
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => { if (e.code === "KeyM") setBig((b) => !b); };
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, []);
   useEffect(() => {
     const id = setInterval(() => {
       setTick((t) => t + 1);
-      if (radar.current) drawRadar(radar.current, S);
+      if (radar.current) drawRadar(radar.current, S, R, big ? 520 : 160);
     }, 100);
     return () => clearInterval(id);
-  }, [S]);
+  }, [S, R, big]);
   const p = S.player;
   const stars = Math.min(5, Math.floor(S.heat));
   const kmh = S.car ? Math.round(Math.abs(S.car.speed) * 3.6) : 0;
@@ -127,7 +137,14 @@ export function HUD({ S, audio }: { S: GameState; audio: GameAudio }) {
         ))}
       </div>
       {/* radar */}
-      <canvas ref={radar} width={R * 2} height={R * 2} className="absolute bottom-5 left-5" />
+      <canvas
+        ref={radar}
+        width={R * 2}
+        height={R * 2}
+        onPointerDown={(e) => { e.stopPropagation(); setBig((b) => !b); }}
+        className={big ? "pointer-events-auto absolute left-1/2 top-1/2 max-h-[90vmin] max-w-[90vmin] -translate-x-1/2 -translate-y-1/2 cursor-pointer" : "pointer-events-auto absolute bottom-5 left-5 cursor-pointer"}
+        title="Map (M)"
+      />
       {audio.radioOn && <div className="absolute bottom-6 left-52 text-xs uppercase tracking-widest opacity-80">♪ {audio.stationName}</div>}
       {S.wasted > 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-hud-wasted">
