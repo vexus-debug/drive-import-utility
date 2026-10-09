@@ -42,7 +42,7 @@ export function LagosDetails({ W }: { W: World }) {
           slabs.push(horiz ? { x: x1 + t, z: gz, sx: 1.6, sz: 1.0 } : { x: gx, z: z1 + t, sx: 1.0, sz: 1.6 });
       }
     }
-    const lowBuildings = W.buildings.filter((b) => b.h < 60 && !b.heritage);
+    const lowBuildings = W.buildings.filter((b) => b.h < 60 && !b.heritage && b.kind !== "bank" && b.kind !== "restaurant" && b.kind !== "cafe");
     return { kerbs, gutters, slabs, lowBuildings };
   }, [W]);
 
