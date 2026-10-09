@@ -20,6 +20,7 @@ export interface Car {
   stun: number;
   blocked: number;
   hitCd: number;
+  y?: number;
   obj: THREE.Object3D | null;
   lights: THREE.MeshLambertMaterial[];
 }

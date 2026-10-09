@@ -50,7 +50,7 @@ function Sim({ S, W, input, audio }: { S: GameState; W: World; input: React.RefO
     for (const c of S.cars) {
       if (!c.obj) continue;
       c.obj.visible = c.active;
-      c.obj.position.set(c.x, 0, c.z);
+      c.obj.position.set(c.x, c.y ?? 0, c.z);
       c.obj.rotation.y = c.h;
     }
     for (const p of S.peds) {
@@ -74,11 +74,12 @@ function Sim({ S, W, input, audio }: { S: GameState; W: World; input: React.RefO
       if (S.camMode === 0) {
         const back = sp.len * 1.3 + 3;
         const k = 1 - Math.exp(-9 * dt);
-        cam.position.lerp(new THREE.Vector3(c.x - fx * back, 2.2 + sp.len * 0.35, c.z - fz * back), k);
-        cam.lookAt(c.x + fx * 4, 1.2, c.z + fz * 4);
+        const cy = c.y ?? 0;
+        cam.position.lerp(new THREE.Vector3(c.x - fx * back, cy + 2.2 + sp.len * 0.35, c.z - fz * back), k);
+        cam.lookAt(c.x + fx * 4, cy + 1.2, c.z + fz * 4);
       } else {
         const head = c.type === "brt" ? 2.6 : c.type === "danfo" ? 2.0 : c.type === "keke" || c.type === "okada" ? 1.6 : 1.25;
-        cam.position.set(c.x + fx * sp.len * 0.12 + Math.cos(c.h) * 0.35, head, c.z + fz * sp.len * 0.12 - Math.sin(c.h) * 0.35);
+        cam.position.set(c.x + fx * sp.len * 0.12 + Math.cos(c.h) * 0.35, head + (c.y ?? 0), c.z + fz * sp.len * 0.12 - Math.sin(c.h) * 0.35);
         cam.rotation.set(-0.06, c.h + Math.PI, 0);
       }
       fov = 72 + Math.abs(c.speed) * 0.35;
